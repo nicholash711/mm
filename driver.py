@@ -62,7 +62,7 @@ def run_trace(trace_file):
 
 os.system("make clean; make all")
 for file in os.listdir("./traces"):
-    if file.endswith(".rep") and 'short' not in file:
+    if file.endswith(".rep"):
         run_trace(os.path.join("./traces", file))
 utilization_average = sum(trace_utilization) / (1 if len(trace_utilization) == 0 else len(trace_utilization))
 performance_average = sum(trace_performance) / (1 if len(trace_performance) == 0 else len(trace_performance))
