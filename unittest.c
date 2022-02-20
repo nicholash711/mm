@@ -341,9 +341,10 @@ static void test_split(record_t **record_table, uint32_t id, size_t size) {
         else if (block == split_block) {
             sprintf(printbuf, "Block was split.");
             logging(LOG_INFO, printbuf);
+            size_t alloc_size = get_size(split_block);
+            split_block = (memory_block_t *)((char *)split_block + sizeof(memory_block_t) - size_offset + alloc_size);
             size_t new_size = get_size(split_block);
-            size_t alloc_size = get_size((memory_block_t *)((char *)(split_block + 1) + new_size));
-            if (alloc_size >= ALIGN(size) && new_size + alloc_size == original_size) {
+            if (alloc_size >= ALIGN(size) && new_size + alloc_size + sizeof(memory_block_t) - size_offset == original_size) {
                 sprintf(printbuf, "New sizes: %ld free, %ld allocated.\n", new_size, alloc_size);
                 logging(LOG_INFO, printbuf);
             }
@@ -358,7 +359,7 @@ static void test_split(record_t **record_table, uint32_t id, size_t size) {
             size_t alloc_size = get_size(split_block);
             split_block = (memory_block_t *)((char *)(split_block) - original_size + alloc_size);
             size_t new_size = get_size(split_block);
-            if (alloc_size >= ALIGN(size) && new_size + alloc_size == original_size) {
+            if (alloc_size >= ALIGN(size) && new_size + alloc_size + sizeof(memory_block_t) - size_offset == original_size) {
                 sprintf(printbuf, "New sizes: %ld free, %ld allocated.", new_size, alloc_size);
                 logging(LOG_INFO, printbuf);
             }
