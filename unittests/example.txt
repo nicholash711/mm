@@ -21,7 +21,8 @@
 # The first line of a unit test will always be two numbers:
 # the first number is the total size of the heap,
 # and the second is the total number of (free or allocated)
-# memory blocks on the heap.
+# memory blocks on the heap. The size must be less than
+# 16*PAGESIZE.
 
 1152 8
 
