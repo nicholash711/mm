@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 #include "csbrk.h"
 #include "err_handler.h"
 #include "support.h"
 #include "umalloc.h"
+=======
+#include "check_heap.h"
+#include "csbrk.h"
+#include "err_handler.h"
+#include "support.h"
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +27,10 @@
 static char printbuf[MAX_LINE_LENGTH];
 static char linebuf[MAX_LINE_LENGTH];
 static int size_offset;
+<<<<<<< HEAD
+=======
+static bool check;
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
 extern memory_block_t *free_head;
 
 /* A struct for keeping track of test blocks. */
@@ -40,6 +51,10 @@ static void print_block(memory_block_t *block);
 // static void print_records(record_t **record_table, size_t len);
 static void print_list(memory_block_t *free_list);
 
+<<<<<<< HEAD
+=======
+static void run_heap_check();
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
 static void test_find(size_t size);
 static void test_extend(size_t size);
 static void test_split(record_t **record_table, uint32_t id, size_t size);
@@ -50,6 +65,11 @@ int main(int argc, char **argv) {
 
     void *heap = NULL;
     size_offset = 0;
+<<<<<<< HEAD
+=======
+    check = false;
+
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
     FILE *infile = read_args(argc, argv);
     linebuf[0] = COMMENT;
 
@@ -65,7 +85,11 @@ int main(int argc, char **argv) {
 
     record_t **record_table = (record_t **)calloc(num_blocks, sizeof(record_t *));
     record_t **record_table_copy = (record_t **)calloc(num_blocks, sizeof(record_t *));
+<<<<<<< HEAD
     heap = malloc(heap_size);
+=======
+    heap = csbrk(heap_size);
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
     free_head = initialize_list(heap, record_table, infile);
 
     for (int i = 0; i < num_blocks; i++) {
@@ -79,6 +103,11 @@ int main(int argc, char **argv) {
     logging(LOG_INFO, printbuf);
     print_list(free_head);
 
+<<<<<<< HEAD
+=======
+    run_heap_check();
+
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
     run_tests(record_table, record_table_copy, num_blocks, infile);
     return EXIT_SUCCESS;
 }
@@ -87,7 +116,11 @@ static FILE *read_args(int argc, char **argv) {
     int option;
     FILE *infile = NULL;
 
+<<<<<<< HEAD
     while ((option = getopt(argc, argv, ":i:s")) != -1) {
+=======
+    while ((option = getopt(argc, argv, ":i:s:c")) != -1) {
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
         switch(option) {
             case 'i':
                 if ((infile = fopen(optarg, "r")) == NULL) {
@@ -99,6 +132,12 @@ static FILE *read_args(int argc, char **argv) {
             case 's':
                 size_offset = sizeof(memory_block_t);
                 break;
+<<<<<<< HEAD
+=======
+            case 'c':
+                check = true;
+                break;
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
             default:
                 sprintf(printbuf, "Ignoring unknown option %c", optopt);
                 logging(LOG_INFO, printbuf);
@@ -215,6 +254,17 @@ static void run_tests(record_t **record_table, record_t **backup, size_t len, FI
     }
 
     while (linebuf[0] != SEPARATOR) {
+<<<<<<< HEAD
+=======
+        if (linebuf[0] == COMMENT || linebuf[0] == BLANK) {
+            if (fgets(linebuf, sizeof(linebuf), infile) == NULL) {
+                logging(LOG_FATAL, "Could not read from input file.\n");
+                exit(EXIT_FAILURE);
+            }
+            continue;
+        }
+
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
         switch (linebuf[0]) {
             case FIND:
                 sscanf(linebuf, "%c %ld", &op, &size);
@@ -235,6 +285,11 @@ static void run_tests(record_t **record_table, record_t **backup, size_t len, FI
             default:
                 break;
         }
+<<<<<<< HEAD
+=======
+
+        run_heap_check();
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
         backup_list(record_table, backup, len);
 
         if (fgets(linebuf, sizeof(linebuf), infile) == NULL) {
@@ -267,6 +322,26 @@ static void print_list(memory_block_t *head) {
     logging(LOG_INFO, printbuf);
 }
 
+<<<<<<< HEAD
+=======
+static void run_heap_check() {
+    if (check) {
+        sprintf(printbuf, "Running heap checker...");
+        logging(LOG_INFO, printbuf);
+        int check_heap_status = check_heap();
+        if (check_heap_status) {
+            sprintf(printbuf, "Heap checker returned nonzero status: %d", check_heap_status);
+            logging(LOG_ERROR, printbuf);
+        }
+        else {
+            sprintf(printbuf, "Heap checker returned all good!");
+            logging(LOG_INFO, printbuf);
+        }
+        
+    }
+}
+
+>>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
 static void test_find(size_t size) {
     sprintf(printbuf, "Testing find with a size of %ld:", size);
     logging(LOG_INFO, printbuf);
