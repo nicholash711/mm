@@ -22,7 +22,6 @@ typedef struct memory_block_struct {
 *  STUDENT TODO:
 *      Write 1-2 sentences for each function explaining what it does. Don't just repeat the name of the function back to us.
 */
-<<<<<<< HEAD
 // Does AND bitwise operator on block_size_alloc and 0x1 to determine if 
 // the block is marked as allocated.
 bool is_allocated(memory_block_t *block);
@@ -49,20 +48,6 @@ memory_block_t *extend(size_t size);
 // split the block of memory into 2 new blocks: an allocated portion, and an unallocated portion.
 memory_block_t *split(memory_block_t *block, size_t size);
 // combines a free memory block with its neighbor.
-=======
-bool is_allocated(memory_block_t *block);
-void allocate(memory_block_t *block);
-void deallocate(memory_block_t *block);
-size_t get_size(memory_block_t *block);
-memory_block_t *get_next(memory_block_t *block);
-void put_block(memory_block_t *block, size_t size, bool alloc);
-void *get_payload(memory_block_t *block);
-memory_block_t *get_block(void *payload);
-
-memory_block_t *find(size_t size);
-memory_block_t *extend(size_t size);
-memory_block_t *split(memory_block_t *block, size_t size);
->>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
 memory_block_t *coalesce(memory_block_t *block);
 
 
