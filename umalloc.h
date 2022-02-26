@@ -43,7 +43,7 @@ memory_block_t *get_block(void *payload);
 
 // using the given size, find a block that is big enough to satisfy the needed size.
 memory_block_t *find(size_t size);
-// if needed, extend the heap to fit size of new block.
+// extends the heap by the given size.
 memory_block_t *extend(size_t size);
 // split the block of memory into 2 new blocks: an allocated portion, and an unallocated portion.
 memory_block_t *split(memory_block_t *block, size_t size);

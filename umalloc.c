@@ -87,6 +87,10 @@ memory_block_t *get_block(void *payload) {
 /*
  *  STUDENT TODO:
  *      Describe how you select which free block to allocate. What placement strategy are you using?
+ * 
+ *      I will be implementing a best fit method to finding a free block. I will have to loop 
+ *      through the free list, determining which free block is closest to needed size. After
+ *      looping through the list, return the closest fitting block
  */
 
 /*
@@ -94,7 +98,20 @@ memory_block_t *get_block(void *payload) {
  */
 memory_block_t *find(size_t size) {
     //? STUDENT TODO
-    return NULL;
+    memory_block_t *cur = free_head;
+    size_t diff = UINT16_MAX;
+    memory_block_t *best_block = NULL;
+
+    while (cur) {
+        size_t temp = get_size(cur) - size;
+        if (temp >= 0 && temp < diff) {
+            diff = temp;
+            best_block = cur;
+        }
+        cur = cur->next;
+    }
+
+    return best_block;
 }
 
 /*
@@ -102,12 +119,33 @@ memory_block_t *find(size_t size) {
  */
 memory_block_t *extend(size_t size) {
     //? STUDENT TODO
-    return NULL;
+    memory_block_t *mem = csbrk(size + sizeof(memory_block_t));
+    if (!mem) {
+        return NULL;
+    }
+
+    mem->block_size_alloc = size;
+    mem->next = NULL;
+
+    if (!free_head) {
+        free_head = mem;
+    } else {
+        memory_block_t *cur = free_head;
+        while (cur->next) {
+            cur = cur->next;
+        }
+        cur->next = mem;
+    }
+
+    return mem;
 }
 
 /*
  *  STUDENT TODO:
  *      Describe how you chose to split allocated blocks. Always? Sometimes? Never? Which end?
+ * 
+ *      blocks will always be split. After getting the 16 byte aligned size, split will get the
+ *      size and split away a block after the given block to be the new free block.
 */
 
 /*
@@ -134,6 +172,17 @@ memory_block_t *coalesce(memory_block_t *block) {
  */
 int uinit() {
     //* STUDENT TODO
+    size_t init_size = 4096;
+    memory_block_t *head = csbrk(init_size);
+    if (!head) {
+        return -1;
+    }
+
+    head->block_size_alloc = init_size - sizeof(memory_block_t);
+    head->next = NULL;
+
+    free_head = head;
+
     return 0;
 }
 
@@ -142,12 +191,44 @@ int uinit() {
  */
 void *umalloc(size_t size) {
     //* STUDENT TODO
-    return NULL;
+    size_t padded_size = ALIGN(size);
+    memory_block_t *best = find(padded_size);
+    if (!best) {
+        best= extend(padded_size);
+        if (!best) {
+            return NULL;
+        }
+    }
+    memory_block_t *next = best->next;
+    // memory_block_t *new_free = split(first, padded_size);
+    
+    
+    // fix free list
+    // check if best is the head;
+    if (best == free_head) {
+        free_head = free_head->next;
+    } else {
+        memory_block_t *cur = free_head;
+        memory_block_t *last = free_head;
+        while (cur != best) {
+            memory_block_t *temp = cur;
+            cur = cur->next;
+            last = temp;
+        }
+        last->next = next;
+    }
+    
+    put_block(best, padded_size, true);
+    
+    return best + 1;
 }
 
 /*
  *  STUDENT TODO:
  *      Describe your free block insertion policy.
+ *      
+ *      The method will insert the newly freed block back into the free list in order. Once the
+ *      position is found in the free list, the memory will be dellocated and
 */
 
 /*
@@ -156,4 +237,24 @@ void *umalloc(size_t size) {
  */
 void ufree(void *ptr) {
     //* STUDENT TODO
+    memory_block_t *cur = free_head;
+    memory_block_t *last = free_head;
+    memory_block_t *block = get_block(ptr);
+
+    // find where header should go in free list
+    // check if free list is NULL
+    if (cur == NULL) {
+        free_head = block;
+    } else {
+        while (cur && (uint64_t)cur < (uint64_t)block) {
+            memory_block_t *temp = cur;
+            cur = cur->next;
+            last = temp;
+        }
+        // insert block
+        last->next = block;
+        block->next = cur;
+    }
+    // change to free
+    deallocate(block);
 }

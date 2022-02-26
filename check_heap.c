@@ -24,13 +24,34 @@ int check_heap() {
     // Example heap check:
     // Check that all blocks in the free list are marked free.
     // If a block is marked allocated, return -1.
-    /*
-        memory_block_t *cur = free_head;
-        while (cur) {
-            if (is_allocated(cur)) {
-                return -1;
-            }
+    memory_block_t *cur = free_head;
+    sbrk_block *blocks = sbrk_blocks;
+    while (cur) {
+        if (is_allocated(cur) || !blocks) {
+            return -1;
         }
-    */
+
+        if ((uint64_t)cur > blocks->sbrk_end) {
+            blocks = blocks->next;
+        } else {
+            cur = cur->next;
+        }
+        
+    }
+
+    // Make sure all blocks are not overlapping
+    // Check that each memory block is aligned
+    // blocks = sbrk_blocks;
+    // uint64_t p = blocks->sbrk_start;
+    // while (blocks) {
+    //     if (p > blocks->sbrk_end) {
+    //         blocks = blocks->next;
+    //     } else {
+    //         memory_block_t *cur = (memory_block_t *)p;
+    //         size_t size = get_size(cur);
+    //         p = (uint64_t)((void *)(cur + 1) + size);
+    //     }
+    // }
+
     return 0;
 }

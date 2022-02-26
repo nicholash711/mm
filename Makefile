@@ -27,13 +27,8 @@ runner: runner.c csbrk_tracked.o umalloc.o check_heap.o err_handler.o support.o
 performance: performance.c csbrk.o  umalloc.o support.o err_handler.o
 	$(CC) $(CFLAGS) -o performance performance.c umalloc.h csbrk.o umalloc.o err_handler.o support.o
 
-<<<<<<< HEAD
-unittest: unittest.o support.o umalloc.o csbrk.o err_handler.o
-	$(CC) $(CFLAGS) -o unittest unittest.c umalloc.h umalloc.o support.o csbrk.o err_handler.o
-=======
 unittest: unittest.o support.o umalloc.o csbrk.o err_handler.o check_heap.o
 	$(CC) $(CFLAGS) -o unittest unittest.c umalloc.h umalloc.o support.o csbrk.o err_handler.o check_heap.o
->>>>>>> 399c9fa3fea9b9eaec0903b952bf07d5c44c7de5
 
 
 # GPROF
