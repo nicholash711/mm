@@ -97,7 +97,6 @@ memory_block_t *get_block(void *payload) {
  * find - finds a free block that can satisfy the umalloc request.
  */
 memory_block_t *find(size_t size) {
-    //? STUDENT TODO
     memory_block_t *cur = free_head;
     size_t diff = UINT16_MAX;
     memory_block_t *best_block = NULL;
@@ -317,10 +316,8 @@ void ufree(void *ptr) {
         }
         
     }
-
     // change to free
     deallocate(block);
-
     // coalesce with any neighbors
     coalesce(block);
 }

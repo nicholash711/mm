@@ -33,12 +33,14 @@ int check_heap() {
     }
 
     sbrk_block *blocks = sbrk_blocks;
-    memory_block_t *ptr = (memory_block_t *)blocks->sbrk_start;
+    memory_block_t *ptr = (memory_block_t *)(blocks->sbrk_start);
     while (blocks) {
         // check if ptr is at the end of block
         if ((uint64_t)ptr == blocks->sbrk_end) {
             blocks = blocks->next;
-            ptr = (memory_block_t *)blocks->sbrk_start;
+            if (blocks) {
+                ptr = (memory_block_t *)(blocks->sbrk_start);
+            }
         } else {
             // check if ptr is outside block
             if ((uint64_t)ptr > blocks->sbrk_end) {
