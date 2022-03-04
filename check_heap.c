@@ -25,33 +25,32 @@ int check_heap() {
     // Check that all blocks in the free list are marked free.
     // If a block is marked allocated, return -1.
     memory_block_t *cur = free_head;
-    sbrk_block *blocks = sbrk_blocks;
     while (cur) {
-        if (is_allocated(cur) || !blocks) {
+        if (is_allocated(cur)) {
             return -1;
         }
-
-        if ((uint64_t)cur > blocks->sbrk_end) {
-            blocks = blocks->next;
-        } else {
-            cur = cur->next;
-        }
-        
+        cur = cur->next;
     }
 
-    // Make sure all blocks are not overlapping
-    // Check that each memory block is aligned
-    // blocks = sbrk_blocks;
-    // uint64_t p = blocks->sbrk_start;
-    // while (blocks) {
-    //     if (p > blocks->sbrk_end) {
-    //         blocks = blocks->next;
-    //     } else {
-    //         memory_block_t *cur = (memory_block_t *)p;
-    //         size_t size = get_size(cur);
-    //         p = (uint64_t)((void *)(cur + 1) + size);
-    //     }
-    // }
+    sbrk_block *blocks = sbrk_blocks;
+    memory_block_t *ptr = (memory_block_t *)blocks->sbrk_start;
+    while (blocks) {
+        // check if ptr is at the end of block
+        if ((uint64_t)ptr == blocks->sbrk_end) {
+            blocks = blocks->next;
+            ptr = (memory_block_t *)blocks->sbrk_start;
+        } else {
+            // check if ptr is outside block
+            if ((uint64_t)ptr > blocks->sbrk_end) {
+                return -1;
+            }
+            // check if block is 16 byte aligned
+            if (get_size(ptr) % 16 != 0) {
+                return -1;
+            }
+            ptr = (memory_block_t *)(get_payload(ptr) + get_size(ptr));
+        }
+    }
 
     return 0;
 }

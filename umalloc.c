@@ -88,9 +88,9 @@ memory_block_t *get_block(void *payload) {
  *  STUDENT TODO:
  *      Describe how you select which free block to allocate. What placement strategy are you using?
  * 
- *      I will be implementing a best fit method to finding a free block. I will have to loop 
- *      through the free list, determining which free block is closest to needed size. After
- *      looping through the list, return the closest fitting block
+ *      I will be implementing a next fit method to finding a free block. I will have to loop 
+ *      through the free list, finding the second block big enough to fit the size and return that
+ *      size.
  */
 
 /*
@@ -118,15 +118,17 @@ memory_block_t *find(size_t size) {
  * extend - extends the heap if more memory is required.
  */
 memory_block_t *extend(size_t size) {
-    //? STUDENT TODO
+    // get memory from heap
     memory_block_t *mem = csbrk(size + sizeof(memory_block_t));
     if (!mem) {
         return NULL;
     }
 
+    // initialize starting values
     mem->block_size_alloc = size;
     mem->next = NULL;
 
+    // put into free list
     if (!free_head) {
         free_head = mem;
     } else {
@@ -152,16 +154,53 @@ memory_block_t *extend(size_t size) {
  * split - splits a given block in parts, one allocated, one free.
  */
 memory_block_t *split(memory_block_t *block, size_t size) {
-    //? STUDENT TODO
-    return NULL;
+    // resize current block to new size and get free block size
+    size_t free_size = get_size(block) - size - (size_t)sizeof(memory_block_t);
+    block->block_size_alloc = size;
+
+    // create new free block and insert into free list
+    memory_block_t *free_block = (memory_block_t *)(get_payload(block) + size);
+    if (!free_block) {
+        return NULL;
+    }
+    free_block->block_size_alloc = free_size;
+    free_block->next = NULL;
+
+    return free_block;
 }
 
 /*
  * coalesce - coalesces a free memory block with neighbors.
  */
 memory_block_t *coalesce(memory_block_t *block) {
-    //? STUDENT TODO
-    return NULL;
+    assert(!is_allocated(block));
+
+    memory_block_t *coa_block = block;
+    // check if neighbor after needs to be coalesced
+    if (block->next && get_payload(block) + get_size(block) == block->next) {
+        memory_block_t *next = block->next;
+        coa_block->block_size_alloc += get_size(next) + (size_t)sizeof(memory_block_t);
+        coa_block->next = next->next;
+    }
+
+    // check if block is not the head
+    if (block != free_head) {
+        memory_block_t *cur = free_head;
+        memory_block_t *last = free_head;
+        // search for last free node before the block
+        while (cur != block) {
+            memory_block_t *temp = cur;
+            cur = cur->next;
+            last = temp;
+        }
+        // check if neightbor before can be coalesced
+        if (cur && get_payload(last) + get_size(last) == cur) {
+            last->block_size_alloc += get_size(cur) + (size_t)sizeof(memory_block_t);
+            last->next = cur->next;
+            coa_block = last;
+        }
+    }
+    return coa_block;
 }
 
 
@@ -171,13 +210,14 @@ memory_block_t *coalesce(memory_block_t *block) {
  * along with allocating initial memory.
  */
 int uinit() {
-    //* STUDENT TODO
-    size_t init_size = 4096;
+    // get block of heap
+    size_t init_size = PAGESIZE;
     memory_block_t *head = csbrk(init_size);
     if (!head) {
         return -1;
     }
 
+    // set initial values for head of free list
     head->block_size_alloc = init_size - sizeof(memory_block_t);
     head->next = NULL;
 
@@ -190,37 +230,51 @@ int uinit() {
  * umalloc -  allocates size bytes and returns a pointer to the allocated memory.
  */
 void *umalloc(size_t size) {
-    //* STUDENT TODO
+    // get size after padding
     size_t padded_size = ALIGN(size);
-    memory_block_t *best = find(padded_size);
-    if (!best) {
-        best= extend(padded_size);
-        if (!best) {
+    // find block to allocate
+    memory_block_t *block = find(padded_size);
+    if (!block) {
+        // extend the heap if no block big enough is found
+        block = extend(padded_size);
+        if (!block) {
             return NULL;
         }
     }
-    memory_block_t *next = best->next;
-    // memory_block_t *new_free = split(first, padded_size);
+
+    // split block if needed
+    if (block->block_size_alloc > padded_size) {
+        memory_block_t *free_block = split(block, padded_size);
+        if (!free_block) {
+            return NULL;
+        }
+        // insert split free block into free list
+        free_block->next = block->next;
+        block->next = free_block;
+    }
     
     
     // fix free list
     // check if best is the head;
-    if (best == free_head) {
+    if (block == free_head) {
         free_head = free_head->next;
     } else {
+        // loop through list until new allocated block is found
         memory_block_t *cur = free_head;
         memory_block_t *last = free_head;
-        while (cur != best) {
+        while (cur != block) {
             memory_block_t *temp = cur;
             cur = cur->next;
             last = temp;
         }
-        last->next = next;
+        last->next = cur->next;
     }
+
+    // check block as an allocated block
+    block->next = NULL;
+    allocate(block);
     
-    put_block(best, padded_size, true);
-    
-    return best + 1;
+    return block + 1;
 }
 
 /*
@@ -228,7 +282,8 @@ void *umalloc(size_t size) {
  *      Describe your free block insertion policy.
  *      
  *      The method will insert the newly freed block back into the free list in order. Once the
- *      position is found in the free list, the memory will be dellocated and
+ *      position is found in the free list, the memory will be dellocated and will coalesce with
+ *      any neighrbors it has.
 */
 
 /*
@@ -237,24 +292,35 @@ void *umalloc(size_t size) {
  */
 void ufree(void *ptr) {
     //* STUDENT TODO
-    memory_block_t *cur = free_head;
-    memory_block_t *last = free_head;
     memory_block_t *block = get_block(ptr);
 
     // find where header should go in free list
     // check if free list is NULL
-    if (cur == NULL) {
+    if (free_head == NULL) {
         free_head = block;
     } else {
-        while (cur && (uint64_t)cur < (uint64_t)block) {
-            memory_block_t *temp = cur;
-            cur = cur->next;
-            last = temp;
+        // loop through linked list until address is in right position
+        if ((uint64_t)free_head > (uint64_t)block) {
+            block->next = free_head;
+            free_head = block;
+        } else {
+            memory_block_t *cur = free_head;
+            memory_block_t *last = free_head;
+            while (cur && (uint64_t)cur < (uint64_t)block) {
+                memory_block_t *temp = cur;
+                cur = cur->next;
+                last = temp;
+            }
+            // insert block
+            last->next = block;
+            block->next = cur;
         }
-        // insert block
-        last->next = block;
-        block->next = cur;
+        
     }
+
     // change to free
     deallocate(block);
+
+    // coalesce with any neighbors
+    coalesce(block);
 }
