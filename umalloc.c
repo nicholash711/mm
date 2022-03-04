@@ -88,9 +88,9 @@ memory_block_t *get_block(void *payload) {
  *  STUDENT TODO:
  *      Describe how you select which free block to allocate. What placement strategy are you using?
  * 
- *      I will be implementing a next fit method to finding a free block. I will have to loop 
- *      through the free list, finding the second block big enough to fit the size and return that
- *      size.
+ *      I will be implementing a best fit method to finding a free block. I will have to loop 
+ *      through the free list, finding the size closest to the size needed, then return the closest
+ *      fitting block.
  */
 
 /*
