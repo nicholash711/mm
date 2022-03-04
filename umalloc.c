@@ -210,7 +210,7 @@ memory_block_t *coalesce(memory_block_t *block) {
  */
 int uinit() {
     // get block of heap
-    size_t init_size = PAGESIZE;
+    size_t init_size = PAGESIZE / 2;
     memory_block_t *head = csbrk(init_size);
     if (!head) {
         return -1;
